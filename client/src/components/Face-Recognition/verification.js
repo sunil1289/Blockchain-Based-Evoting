@@ -1,28 +1,28 @@
-import React, { useState, useEffect, useRef } from 'react';
-import * as faceapi from 'face-api.js';
-import './Verification.css';
-import { useNavigate } from 'react-router-dom';
-import { RingLoader } from 'react-spinners';
-import { css } from '@emotion/react';
+import React, { useState, useEffect, useRef } from "react";
+import * as faceapi from "face-api.js";
+import "./Verification.css";
+import { useNavigate } from "react-router-dom";
+import { RingLoader } from "react-spinners";
+import { css } from "@emotion/react";
 
 const Verification = () => {
   const videoHeight = 480;
   const videoWidth = 640;
   const [initializing, setInitializing] = useState(true);
-  const [message, setMessage] = useState('');
+  const [message, setMessage] = useState("");
   const videoRef = useRef();
   const canvasRef = useRef();
   const navigate = useNavigate();
 
   const stopVideoStream = () => {
     if (videoRef.current && videoRef.current.srcObject) {
-      videoRef.current.srcObject.getTracks().forEach(track => track.stop());
+      videoRef.current.srcObject.getTracks().forEach((track) => track.stop());
     }
   };
 
   useEffect(() => {
     const loadModels = async () => {
-      const MODEL_URL = './models';
+      const MODEL_URL = "./models";
       try {
         await Promise.all([
           faceapi.nets.tinyFaceDetector.loadFromUri(MODEL_URL),
@@ -33,8 +33,8 @@ const Verification = () => {
         ]);
         startVideo();
       } catch (error) {
-        console.error('Error loading models:', error);
-        setMessage('Failed to load face recognition models.');
+        console.error("Error loading models:", error);
+        setMessage("Failed to load face recognition models.");
         setInitializing(false);
       }
     };
@@ -46,22 +46,23 @@ const Verification = () => {
   }, []);
 
   const startVideo = () => {
-    navigator.mediaDevices.getUserMedia({ video: {} })
+    navigator.mediaDevices
+      .getUserMedia({ video: {} })
       .then((stream) => {
         if (videoRef.current) {
           videoRef.current.srcObject = stream;
         }
       })
       .catch((err) => {
-        console.error('Error accessing webcam:', err);
-        setMessage('Failed to access webcam.');
+        console.error("Error accessing webcam:", err);
+        setMessage("Failed to access webcam.");
         setInitializing(false);
       });
   };
 
   const handleVideoOnPlay = async () => {
     if (videoRef.current.readyState < 2) {
-      videoRef.current.addEventListener('loadedmetadata', () => {
+      videoRef.current.addEventListener("loadedmetadata", () => {
         startFaceDetection();
       });
       return;
@@ -71,7 +72,7 @@ const Verification = () => {
 
   const startFaceDetection = async () => {
     const canvas = faceapi.createCanvasFromMedia(videoRef.current);
-    canvasRef.current.innerHTML = '';
+    canvasRef.current.innerHTML = "";
     canvasRef.current.appendChild(canvas);
 
     const displaySize = { width: videoWidth, height: videoHeight };
@@ -79,9 +80,11 @@ const Verification = () => {
 
     const labeledFaceDescriptors = await loadLabeledImages();
     if (!labeledFaceDescriptors) {
-      setMessage('Failed to load reference face. Please ensure a valid profile image is provided.');
+      setMessage(
+        "Failed to load reference face. Please ensure a valid profile image is provided."
+      );
       setInitializing(false);
-      navigate('/login');
+      navigate("/login");
       return;
     }
 
@@ -90,42 +93,55 @@ const Verification = () => {
     const regInterval = setInterval(async () => {
       try {
         const detections = await faceapi
-          .detectAllFaces(videoRef.current, new faceapi.TinyFaceDetectorOptions())
+          .detectAllFaces(
+            videoRef.current,
+            new faceapi.TinyFaceDetectorOptions()
+          )
           .withFaceLandmarks()
           .withFaceDescriptors()
           .withFaceExpressions();
 
-        const resizedDetections = faceapi.resizeResults(detections, displaySize);
+        const resizedDetections = faceapi.resizeResults(
+          detections,
+          displaySize
+        );
 
-        const context = canvas.getContext('2d');
+        const context = canvas.getContext("2d");
         context.clearRect(0, 0, videoWidth, videoHeight);
 
         faceapi.draw.drawDetections(canvas, resizedDetections);
         faceapi.draw.drawFaceLandmarks(canvas, resizedDetections);
 
-        const results = resizedDetections.map((d) => faceMatcher.findBestMatch(d.descriptor));
+        const results = resizedDetections.map((d) =>
+          faceMatcher.findBestMatch(d.descriptor)
+        );
 
         results.forEach((result, i) => {
           const box = resizedDetections[i].detection.box;
-          const drawBox = new faceapi.draw.DrawBox(box, { label: result.toString() });
+          const drawBox = new faceapi.draw.DrawBox(box, {
+            label: result.toString(),
+          });
           drawBox.draw(canvas);
         });
 
-        const expectedLabel = sessionStorage.getItem('name')?.split(' ')[0];
+        const expectedLabel = sessionStorage.getItem("name")?.split(" ")[0];
         if (results[0]?._label === expectedLabel) {
-          setMessage('Face verified successfully.');
-          stopVideoStream();            // Stop camera on success
+          setMessage("Face verified successfully.");
+          stopVideoStream();
           clearInterval(regInterval);
-          navigate('/voter/dashboard');
+          navigate("/voter/dashboard");
         } else {
-          setMessage('Face could not be verified.');
-          stopVideoStream();            // Stop camera on failure
+          setMessage("Face could not be verified.");
+          stopVideoStream();
           clearInterval(regInterval);
-          navigate('/login');
+
+          setTimeout(() => {
+            navigate("/login");
+          }, 2000);
         }
       } catch (error) {
-        console.error('Error during face detection:', error);
-        setMessage('Error during face verification.');
+        console.error("Error during face detection:", error);
+        setMessage("Error during face verification.");
         clearInterval(regInterval);
         stopVideoStream();
       }
@@ -135,20 +151,20 @@ const Verification = () => {
   };
 
   const loadLabeledImages = async () => {
-    const label = sessionStorage.getItem('name')?.split(' ')[0];
-    const imageURL = sessionStorage.getItem('pictureURL');
+    const label = sessionStorage.getItem("name")?.split(" ")[0];
+    const imageURL = sessionStorage.getItem("pictureURL");
 
     if (!label || !imageURL) {
-      console.error('Missing sessionStorage data:', { label, imageURL });
-      setMessage('User data not found. Please log in again.');
+      console.error("Missing sessionStorage data:", { label, imageURL });
+      setMessage("User data not found. Please log in again.");
       return null;
     }
 
     try {
-      const response = await fetch(imageURL, { method: 'HEAD' });
+      const response = await fetch(imageURL, { method: "HEAD" });
       if (!response.ok) {
-        console.error('Invalid image URL:', imageURL);
-        setMessage('Profile image is inaccessible.');
+        console.error("Invalid image URL:", imageURL);
+        setMessage("Profile image is inaccessible.");
         return null;
       }
 
@@ -159,14 +175,18 @@ const Verification = () => {
         .withFaceDescriptor();
 
       if (!detections) {
-        console.error('No face detected in reference image:', imageURL);
-        setMessage('No face detected in the provided image. Please upload a clear face image.');
+        console.error("No face detected in reference image:", imageURL);
+        setMessage(
+          "No face detected in the provided image. Please upload a clear face image."
+        );
         return null;
       }
 
-      return [new faceapi.LabeledFaceDescriptors(label, [detections.descriptor])];
+      return [
+        new faceapi.LabeledFaceDescriptors(label, [detections.descriptor]),
+      ];
     } catch (error) {
-      console.error('Error loading labeled images:', error);
+      console.error("Error loading labeled images:", error);
       setMessage(`Failed to load reference face: ${error.message}`);
       return null;
     }
@@ -177,13 +197,18 @@ const Verification = () => {
     margin: 0 auto;
     border-color: red;
   `;
-  const color = '#101C03';
+  const color = "#101C03";
 
   return (
     <div className="detection">
       <span>
         {initializing && (
-          <RingLoader color={color} loading={initializing} css={override} size={100} />
+          <RingLoader
+            color={color}
+            loading={initializing}
+            css={override}
+            size={100}
+          />
         )}
         <span className="alert">{message}</span>
       </span>

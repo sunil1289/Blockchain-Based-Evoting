@@ -1,199 +1,204 @@
+// client/src/pages/ManageCandidates.js
 import React, { useEffect, useState } from "react";
-import Electionabi from "../../contracts/Election.json";
-import { MDBDataTable } from "mdbreact";
-import Navbar from "../Layouts/Navbar";
-import "../../screens/Voter/voterDashboard.css";
-import EditCandidate from "./EditCandidate";
 import { Link } from "react-router-dom";
-import { RiDashboardLine, RiQuestionnaireFill } from "react-icons/ri";
-import { FaUserEdit } from "react-icons/fa";
-import { AiFillFileAdd } from "react-icons/ai";
-import { MdManageAccounts } from "react-icons/md";
-import NotFound from "../Layouts/NotFound";
-import { FaClipboardList } from "react-icons/fa";
+import Navbar from "../Layouts/Navbar";
 import Web3 from "web3";
+import ElectionFactoryABI from "../../contracts/ElectionFactory.json";
+import {
+  FaEye,
+  FaEyeSlash,
+  FaUserEdit,
+  FaVoteYea,
+  FaClipboardList,
+  FaSearch,
+} from "react-icons/fa";
+import { MdHowToVote } from "react-icons/md";
+import { AiFillFileAdd } from "react-icons/ai";
+import { RiDashboardLine, RiQuestionnaireFill } from "react-icons/ri";
+
+const ITEMS_PER_PAGE = 10;
 
 const ManageCandidates = () => {
-  const [currentAccount, setCurrentAccount] = useState("");
+  const [account, setAccount] = useState("");
+  const [contract, setContract] = useState(null);
   const [candidates, setCandidates] = useState([]);
-  const [electionContract, setElectionContract] = useState(null);
-  const [editCandidate, setEditCandidate] = useState(false);
-  const [editCandidateObj, setEditCandidateObj] = useState({});
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState(null);
+  const [filtered, setFiltered] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [msg, setMsg] = useState("");
+  const [search, setSearch] = useState("");
+  const [filter, setFilter] = useState("all");
+  const [currentPage, setCurrentPage] = useState(1);
+
+  const connectWallet = async () => {
+    if (!window.ethereum) return alert("Install MetaMask");
+    try {
+      await window.ethereum.request({ method: "eth_requestAccounts" });
+      const web3 = new Web3(window.ethereum);
+      const accounts = await web3.eth.getAccounts();
+      setAccount(accounts[0]);
+      const netId = await web3.eth.net.getId();
+      const deployed = ElectionFactoryABI.networks[netId];
+      if (!deployed) throw new Error("Contract not deployed");
+      const instance = new web3.eth.Contract(
+        ElectionFactoryABI.abi,
+        deployed.address
+      );
+      setContract(instance);
+    } catch (err) {
+      alert("Connection failed");
+    }
+  };
+
+  const loadAllCandidates = async () => {
+    if (!contract) return;
+    setLoading(true);
+    setMsg("");
+    const allCandidates = [];
+
+    try {
+      const electionIds = await contract.methods
+        .getAllElectionIdsAdmin()
+        .call();
+
+      for (const id of electionIds) {
+        const election = await contract.methods.getElection(id).call();
+        const electionName = election.name || election[0];
+        const electionHidden = election.hidden === true || election[7] === true;
+
+        try {
+          const batch = await contract.methods
+            .getCandidatesForElectionAdmin(id)
+            .call();
+          const ids = batch[0];
+          const names = batch[1];
+          const parties = batch[2];
+          const citizenshipNos = batch[3];
+          const dobs = batch[4];
+          const imgs = batch[5];
+          const emails = batch[6];
+          const voteCounts = batch[7];
+          const hiddenFlags = batch[8];
+
+          for (let i = 0; i < ids.length; i++) {
+            allCandidates.push({
+              electionId: Number(id),
+              electionName,
+              electionHidden,
+              candidateId: Number(ids[i]),
+              name: names[i] || "Unknown",
+              party: parties[i] || "Independent",
+              citizenshipNo: citizenshipNos[i] || "-",
+              dob: dobs[i] || "-",
+              img: imgs[i] || "/default-candidate.png",
+              email: emails[i] || "-",
+              voteCount: Number(voteCounts[i] || 0),
+              hidden: hiddenFlags[i] === true,
+            });
+          }
+        } catch (err) {
+          console.warn(`Election ${id} has no candidates or failed`);
+        }
+      }
+
+      setCandidates(allCandidates);
+      setFiltered(allCandidates);
+    } catch (err) {
+      console.error(err);
+      setMsg("Failed to load candidates");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const toggleVisibility = async (electionId, candidateId, isHidden) => {
+    if (!contract || !account) return;
+    setMsg("Please confirm in MetaMask...");
+    try {
+      const method = isHidden ? "unhideCandidate" : "hideCandidate";
+      await contract.methods[method](electionId, candidateId).send({
+        from: account,
+        gas: 300000,
+      });
+      setMsg(
+        isHidden
+          ? "Candidate now VISIBLE to public"
+          : "Candidate now HIDDEN from public"
+      );
+      loadAllCandidates();
+    } catch (err) {
+      setMsg(
+        err.code === 4001
+          ? "Transaction rejected"
+          : "Failed: " + (err.message || "")
+      );
+    }
+  };
+
+  // Filter & Search
+  useEffect(() => {
+    let result = candidates;
+
+    if (search) {
+      result = result.filter(
+        (c) =>
+          c.name.toLowerCase().includes(search.toLowerCase()) ||
+          c.party.toLowerCase().includes(search.toLowerCase()) ||
+          c.electionName.toLowerCase().includes(search.toLowerCase()) ||
+          c.citizenshipNo.includes(search) ||
+          c.email.toLowerCase().includes(search.toLowerCase())
+      );
+    }
+
+    if (filter === "visible") result = result.filter((c) => !c.hidden);
+    if (filter === "hidden") result = result.filter((c) => c.hidden);
+    if (filter === "hidden-election")
+      result = result.filter((c) => c.electionHidden);
+
+    setFiltered(result);
+    setCurrentPage(1);
+  }, [search, filter, candidates]);
+
+  // Pagination
+  const totalPages = Math.ceil(filtered.length / ITEMS_PER_PAGE);
+  const paginated = filtered.slice(
+    (currentPage - 1) * ITEMS_PER_PAGE,
+    currentPage * ITEMS_PER_PAGE
+  );
 
   useEffect(() => {
-    const initialize = async () => {
-      await loadWeb3();
-      await loadBlockchainData();
-    };
-    initialize();
+    connectWallet();
   }, []);
 
-  const loadWeb3 = async () => {
-    try {
-      if (window.ethereum) {
-        window.web3 = new Web3(window.ethereum);
-        await window.ethereum.request({ method: "eth_requestAccounts" });
-      } else if (window.web3) {
-        window.web3 = new Web3(window.web3.currentProvider);
-      } else {
-        throw new Error(
-          "Non-Ethereum browser detected. Please install MetaMask."
-        );
-      }
-    } catch (err) {
-      setError(err.message);
-      console.error("Web3 initialization failed:", err);
-    }
-  };
-
-  const loadBlockchainData = async () => {
-    setLoading(true);
-    setError(null);
-    try {
-      const web3 = window.web3;
-      if (!web3) throw new Error("Web3 not initialized.");
-
-      const accounts = await web3.eth.getAccounts();
-      setCurrentAccount(accounts[0] || "");
-
-      const networkId = await web3.eth.net.getId();
-      const networkData = Electionabi.networks[networkId];
-
-      if (!networkData) {
-        throw new Error("Smart contract not deployed on the current network.");
-      }
-
-      const election = new web3.eth.Contract(
-        Electionabi.abi,
-        networkData.address
-      );
-      setElectionContract(election);
-
-      const totalCandidates = await election.methods.candidatesCount().call();
-      const candidateList = [];
-
-      for (let i = 1; i <= totalCandidates; i++) {
-        const candidate = await election.methods.candidates(i).call();
-        candidateList.push({
-          id: candidate.id,
-          name: candidate.name,
-          votecount: candidate.votecount,
-          party: candidate.party,
-          citizenshipNo: candidate.citizenshipNo,
-          dob: candidate.dob,
-          img: candidate.img,
-          email: candidate.email,
-        });
-      }
-
-      setCandidates(candidateList);
-    } catch (err) {
-      setError(err.message || "Failed to load blockchain data.");
-      console.error("Error loading blockchain data:", err);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const deleteCandidates = async (id) => {
-    setLoading(true);
-    setError(null);
-    try {
-      if (!electionContract)
-        throw new Error("Election contract not initialized.");
-      await electionContract.methods
-        .delCandidates(id)
-        .send({ from: currentAccount })
-        .on("transactionHash", () => {
-          console.log("Successfully deleted candidate:", id);
-          window.location.reload();
-        });
-    } catch (err) {
-      setError("Failed to delete candidate.");
-      console.error("Error deleting candidate:", err);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const editCandidates = async (id, name, party, citizenshipNo, dob, email) => {
-    setLoading(true);
-    setError(null);
-    try {
-      if (!electionContract)
-        throw new Error("Election contract not initialized.");
-      await electionContract.methods
-        .editCandidates(id, name, party, citizenshipNo, dob, email)
-        .send({ from: currentAccount })
-        .on("transactionHash", () => {
-          console.log("Successfully edited candidate:", id);
-          setEditCandidate(false);
-          window.location.reload();
-        });
-    } catch (err) {
-      setError("Failed to edit candidate.");
-      console.error("Error editing candidate:", err);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const editHandler = (candidate = {}) => {
-    setEditCandidate(true);
-    setEditCandidateObj(candidate);
-  };
-
-  const candidateData = () => ({
-    columns: [
-      { label: "Candidate Id", field: "id", sort: "asc", width: 50 },
-      { label: "Name", field: "name", sort: "asc", width: 100 },
-      { label: "Email", field: "email", sort: "asc", width: 150 },
-      { label: "Citizenship No.", field: "citizenno", sort: "asc", width: 100 },
-      { label: "Party", field: "party", sort: "asc", width: 50 },
-      { label: "DOB", field: "dob", sort: "asc", width: 100 },
-      { label: "Actions", field: "actions", sort: false },
-    ],
-    rows: candidates.map((candidate) => ({
-      id: candidate.id,
-      name: candidate.name,
-      email: candidate.email,
-      citizenno: candidate.citizenshipNo,
-      party: candidate.party,
-      dob: candidate.dob,
-      actions: (
-        <>
-          <button
-            className="btn btn-success mx-1"
-            onClick={() => editHandler(candidate)}
-            disabled={loading}
-          >
-            Edit
-          </button>
-          <button
-            className="btn btn-danger"
-            onClick={() => deleteCandidates(candidate.id)}
-            disabled={loading}
-          >
-            Del
-          </button>
-        </>
-      ),
-    })),
-  });
+  useEffect(() => {
+    if (contract) loadAllCandidates();
+  }, [contract]);
 
   return (
-    <div>
+    <>
       <Navbar />
       <div className="row dashboard-container">
-        {/* Sidebar */}
         <div className="sidebar col-12 col-lg-3 col-md-5 col-sm-6">
           <div className="sidebar-items">
             <div className="sidebar-titles py-3 px-1">
               <Link to="/admin/dashboard" className="link d-block">
                 <RiDashboardLine />
                 <span className="mx-3 py-2">Dashboard</span>
+              </Link>
+            </div>
+          </div>
+          <div className="sidebar-items">
+            <div className="sidebar-titles py-3 px-1">
+              <Link to="/admin/addElection" className="link d-block">
+                <MdHowToVote />
+                <span className="mx-3 py-2">Add Election</span>
+              </Link>
+            </div>
+          </div>
+          <div className="sidebar-items">
+            <div className="sidebar-titles py-3 px-1">
+              <Link to="/admin/manageElection" className="link d-block">
+                <FaVoteYea />
+                <span className="mx-3 py-2">Manage Election</span>
               </Link>
             </div>
           </div>
@@ -209,13 +214,14 @@ const ManageCandidates = () => {
             <div className="sidebar-titles py-3 px-1">
               <Link to="/admin/manageCandidates" className="link d-block">
                 <FaUserEdit />
-                <span className="mx-3 py-2">Manage Candidate</span>
+                <span className="mx-3 py-2">Manage Candidates</span>
               </Link>
             </div>
           </div>
+
           <div className="sidebar-items">
             <div className="sidebar-titles py-3 px-1">
-              <Link to="/admin/chatbotManager" className="link d-block">
+              <Link to="/admin/ChatbotManager" className="link d-block">
                 <RiQuestionnaireFill />
                 <span className="mx-3 py-2">Manage Chatbot Questions</span>
               </Link>
@@ -224,51 +230,191 @@ const ManageCandidates = () => {
 
           <div className="sidebar-items">
             <div className="sidebar-titles py-3 px-1">
-              <Link to="/admin/manifesto" className="link d-block">
+              <Link to="/admin/manifesto" className="link d-block text-white">
                 <FaClipboardList />
                 <span className="mx-3 py-2">Manage Manifestos</span>
               </Link>
             </div>
           </div>
         </div>
+        {/* MAIN CONTENT */}
+        <div className="col p-5">
+          <div className="d-flex justify-content-between align-items-center mb-4">
+            <span className="badge bg-primary fs-5">
+              {filtered.length} Candidates
+            </span>
+          </div>
 
-        {/* Dashboard */}
-        <div className="dashboard col-12 col-lg-9 col-md-7 col-sm-6 p-0">
+          {/* SEARCH + FILTER */}
+          <div className="row g-3 mb-4">
+            <div className="col-md-6">
+              <div className="input-group input-group-lg">
+                <span className="input-group-text">
+                  <FaSearch />
+                </span>
+                <input
+                  type="text"
+                  className="form-control"
+                  placeholder="Search"
+                  value={search}
+                  onChange={(e) => setSearch(e.target.value)}
+                />
+              </div>
+            </div>
+            <div className="col-md-4">
+              <select
+                className="form-select form-select-lg"
+                value={filter}
+                onChange={(e) => setFilter(e.target.value)}
+              >
+                <option value="all">All Candidates</option>
+                <option value="visible">Visible to Public</option>
+                <option value="hidden">Hidden from Public</option>
+                <option value="hidden-election">In Hidden Elections</option>
+              </select>
+            </div>
+          </div>
+
           {loading ? (
-            <div className="text-center my-5">
-              <div className="spinner-border" role="status">
-                <span className="visually-hidden">Loading...</span>
-              </div>
-              <p>Loading candidates...</p>
+            <div className="text-center py-5">
+              <div
+                className="spinner-border text-primary"
+                style={{ width: "4rem", height: "4rem" }}
+              ></div>
+              <p className="fs-4 mt-3">Loading all candidates...</p>
             </div>
-          ) : error ? (
-            <div className="alert alert-danger m-4" role="alert">
-              {error}
+          ) : filtered.length === 0 ? (
+            <div className="alert alert-info text-center p-5 fs-3">
+              No candidates match your filter
             </div>
-          ) : currentAccount ? (
-            editCandidate ? (
-              <EditCandidate
-                candidate={editCandidateObj}
-                editFunction={editCandidates}
-                onCancel={() => setEditCandidate(false)}
-              />
-            ) : (
-              <div className="row m-4 py-2 overflow-hidden">
-                <h1>CANDIDATES LIST</h1>
-                <hr />
-                {candidates.length === 0 ? (
-                  <p>No candidates found.</p>
-                ) : (
-                  <MDBDataTable striped data={candidateData()} />
-                )}
-              </div>
-            )
           ) : (
-            <NotFound />
+            <>
+              <div className="table-responsive shadow-lg rounded">
+                <table className="table table-hover align-middle">
+                  <thead className="bg-primary text-white">
+                    <tr>
+                      <th>Election</th>
+                      <th>Photo</th>
+                      <th>Name</th>
+                      <th>Party</th>
+                      <th>Votes</th>
+                      <th>Status</th>
+                      <th>Action</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {paginated.map((c) => (
+                      <tr
+                        key={`${c.electionId}-${c.candidateId}`}
+                        className={
+                          c.hidden || c.electionHidden
+                            ? "table-secondary opacity-75"
+                            : ""
+                        }
+                      >
+                        <td>
+                          <div>
+                            <strong>{c.electionName}</strong>
+                            {c.electionHidden && (
+                              <div className="badge bg-danger mt-1">
+                                Hidden Election
+                              </div>
+                            )}
+                          </div>
+                        </td>
+                        <td>
+                          <img
+                            src={c.img}
+                            alt={c.name}
+                            className="rounded-circle"
+                            style={{
+                              width: 50,
+                              height: 50,
+                              objectFit: "cover",
+                            }}
+                          />
+                        </td>
+                        <td className="fw-bold">{c.name}</td>
+                        <td>{c.party}</td>
+                        <td>
+                          <span className="badge bg-success fs-5">
+                            {c.voteCount}
+                          </span>
+                        </td>
+                        <td>
+                          {c.hidden ? (
+                            <span className="text-danger">Hidden</span>
+                          ) : c.electionHidden ? (
+                            <span className="text-warning">
+                              Election Hidden
+                            </span>
+                          ) : (
+                            <span className="text-success">Visible</span>
+                          )}
+                        </td>
+                        <td>
+                          <button
+                            onClick={() =>
+                              toggleVisibility(
+                                c.electionId,
+                                c.candidateId,
+                                c.hidden
+                              )
+                            }
+                            className={`btn btn-lg ${
+                              c.hidden ? "btn-success" : "btn-warning"
+                            }`}
+                            disabled={c.electionHidden}
+                            title={
+                              c.electionHidden
+                                ? "Cannot show: Election is hidden"
+                                : ""
+                            }
+                          >
+                            {c.hidden ? (
+                              <>
+                                Show Publicly <FaEye />
+                              </>
+                            ) : (
+                              <>
+                                Hide from Public <FaEyeSlash />
+                              </>
+                            )}
+                          </button>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+
+              {/* PAGINATION */}
+              {totalPages > 1 && (
+                <nav className="mt-4">
+                  <ul className="pagination justify-content-center">
+                    {Array.from({ length: totalPages }, (_, i) => (
+                      <li
+                        key={i + 1}
+                        className={`page-item ${
+                          currentPage === i + 1 ? "active" : ""
+                        }`}
+                      >
+                        <button
+                          className="page-link"
+                          onClick={() => setCurrentPage(i + 1)}
+                        >
+                          {i + 1}
+                        </button>
+                      </li>
+                    ))}
+                  </ul>
+                </nav>
+              )}
+            </>
           )}
         </div>
       </div>
-    </div>
+    </>
   );
 };
 

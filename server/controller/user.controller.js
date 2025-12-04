@@ -6,316 +6,15 @@ import bcrypt from "bcrypt";
 import cloudinary from "../config/cloudinary.js";
 import nodemailer from "nodemailer";
 import Web3 from "web3";
+
 dotenv.config();
 
-const web3 = new Web3("http://127.0.0.1:8545"); 
-const contractABI = [
-  {
-    inputs: [],
-    stateMutability: "nonpayable",
-    type: "constructor",
-  },
-  {
-    inputs: [
-      {
-        internalType: "uint256",
-        name: "",
-        type: "uint256",
-      },
-    ],
-    name: "candidates",
-    outputs: [
-      {
-        internalType: "uint256",
-        name: "id",
-        type: "uint256",
-      },
-      {
-        internalType: "string",
-        name: "name",
-        type: "string",
-      },
-      {
-        internalType: "string",
-        name: "party",
-        type: "string",
-      },
-      {
-        internalType: "string",
-        name: "citizenshipNo",
-        type: "string",
-      },
-      {
-        internalType: "string",
-        name: "dob",
-        type: "string",
-      },
-      {
-        internalType: "string",
-        name: "img",
-        type: "string",
-      },
-      {
-        internalType: "string",
-        name: "email",
-        type: "string",
-      },
-      {
-        internalType: "uint256",
-        name: "votecount",
-        type: "uint256",
-      },
-    ],
-    stateMutability: "view",
-    type: "function",
-    constant: true,
-  },
-  {
-    inputs: [],
-    name: "candidatesCount",
-    outputs: [
-      {
-        internalType: "uint256",
-        name: "",
-        type: "uint256",
-      },
-    ],
-    stateMutability: "view",
-    type: "function",
-    constant: true,
-  },
-  {
-    inputs: [],
-    name: "temp",
-    outputs: [
-      {
-        internalType: "uint256",
-        name: "",
-        type: "uint256",
-      },
-    ],
-    stateMutability: "view",
-    type: "function",
-    constant: true,
-  },
-  {
-    inputs: [
-      {
-        internalType: "address",
-        name: "",
-        type: "address",
-      },
-    ],
-    name: "votedornot",
-    outputs: [
-      {
-        internalType: "bool",
-        name: "",
-        type: "bool",
-      },
-    ],
-    stateMutability: "view",
-    type: "function",
-    constant: true,
-  },
-  {
-    inputs: [
-      {
-        internalType: "address",
-        name: "",
-        type: "address",
-      },
-    ],
-    name: "voters",
-    outputs: [
-      {
-        internalType: "string",
-        name: "userHash",
-        type: "string",
-      },
-      {
-        internalType: "bool",
-        name: "registered",
-        type: "bool",
-      },
-      {
-        internalType: "string",
-        name: "voteHash",
-        type: "string",
-      },
-    ],
-    stateMutability: "view",
-    type: "function",
-    constant: true,
-  },
-  {
-    inputs: [
-      {
-        internalType: "string",
-        name: "name",
-        type: "string",
-      },
-      {
-        internalType: "string",
-        name: "party",
-        type: "string",
-      },
-      {
-        internalType: "string",
-        name: "citizenshipNo",
-        type: "string",
-      },
-      {
-        internalType: "string",
-        name: "dob",
-        type: "string",
-      },
-      {
-        internalType: "string",
-        name: "img",
-        type: "string",
-      },
-      {
-        internalType: "string",
-        name: "email",
-        type: "string",
-      },
-    ],
-    name: "addCandidates",
-    outputs: [],
-    stateMutability: "nonpayable",
-    type: "function",
-  },
-  {
-    inputs: [
-      {
-        internalType: "uint256",
-        name: "id",
-        type: "uint256",
-      },
-    ],
-    name: "delCandidates",
-    outputs: [],
-    stateMutability: "nonpayable",
-    type: "function",
-  },
-  {
-    inputs: [
-      {
-        internalType: "uint256",
-        name: "id",
-        type: "uint256",
-      },
-      {
-        internalType: "string",
-        name: "name",
-        type: "string",
-      },
-      {
-        internalType: "string",
-        name: "party",
-        type: "string",
-      },
-      {
-        internalType: "string",
-        name: "citizenshipNo",
-        type: "string",
-      },
-      {
-        internalType: "string",
-        name: "dob",
-        type: "string",
-      },
-      {
-        internalType: "string",
-        name: "email",
-        type: "string",
-      },
-    ],
-    name: "editCandidates",
-    outputs: [],
-    stateMutability: "nonpayable",
-    type: "function",
-  },
-  {
-    inputs: [
-      {
-        internalType: "string",
-        name: "_dataToHash",
-        type: "string",
-      },
-    ],
-    name: "registerUser",
-    outputs: [],
-    stateMutability: "nonpayable",
-    type: "function",
-  },
-  {
-    inputs: [
-      {
-        internalType: "address",
-        name: "_user",
-        type: "address",
-      },
-      {
-        internalType: "string",
-        name: "_dataToHash",
-        type: "string",
-      },
-    ],
-    name: "verifyUser",
-    outputs: [
-      {
-        internalType: "bool",
-        name: "",
-        type: "bool",
-      },
-    ],
-    stateMutability: "view",
-    type: "function",
-    constant: true,
-  },
-  {
-    inputs: [
-      {
-        internalType: "uint256",
-        name: "_id",
-        type: "uint256",
-      },
-    ],
-    name: "vote",
-    outputs: [],
-    stateMutability: "nonpayable",
-    type: "function",
-  },
-  {
-    inputs: [
-      {
-        internalType: "address",
-        name: "_voter",
-        type: "address",
-      },
-      {
-        internalType: "uint256",
-        name: "_candidateId",
-        type: "uint256",
-      },
-    ],
-    name: "verifyVote",
-    outputs: [
-      {
-        internalType: "bool",
-        name: "",
-        type: "bool",
-      },
-    ],
-    stateMutability: "view",
-    type: "function",
-    constant: true,
-  },
-];
+const contractJson = require("../../client/src/contracts/Election.json");
+const contractABI = contractJson.abi;
 
-const contractAddress = "0xBa3565042549D3ef3e1cf251bC8610c2216C459c"; 
+const contractAddress = process.env.CONTRACT_ADDRESS;
+
+const web3 = new Web3("http://127.0.0.1:8545");
 const contract = new web3.eth.Contract(contractABI, contractAddress);
 
 const transporter = nodemailer.createTransport({
@@ -357,7 +56,7 @@ export const userRegister = async (req, res) => {
         .status(200)
         .json({ status: false, message: "Citizenship Number must be unique" });
     }
-y
+    y;
     const picture_url = await cloudinary.uploader.upload(file.path, {
       folder: "profile_pics",
     });
@@ -383,13 +82,11 @@ y
           .registerUser(dataToHash)
           .send({ from: accounts[0] });
 
-        res
-          .status(200)
-          .json({
-            status: true,
-            message: "Register Successful",
-            data: userData,
-          });
+        res.status(200).json({
+          status: true,
+          message: "Register Successful",
+          data: userData,
+        });
       } else {
         res
           .status(400)
@@ -398,12 +95,10 @@ y
     });
   } catch (error) {
     console.error("Registration error:", error);
-    res
-      .status(400)
-      .json({
-        status: false,
-        message: error.message || "An error occurred during registration",
-      });
+    res.status(400).json({
+      status: false,
+      message: error.message || "An error occurred during registration",
+    });
   }
 };
 
@@ -432,13 +127,11 @@ export const userLogin = async (req, res) => {
 
         transporter.sendMail(mailOptions, (err, info) => {
           if (err) {
-            return res
-              .status(500)
-              .json({
-                status: false,
-                message: "Failed to send OTP",
-                error: err,
-              });
+            return res.status(500).json({
+              status: false,
+              message: "Failed to send OTP",
+              error: err,
+            });
           } else {
             return res.status(200).json({
               status: true,

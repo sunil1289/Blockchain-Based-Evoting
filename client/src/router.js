@@ -18,6 +18,8 @@ import GetMetaId from "./components/GetMetaId/GetMetaId";
 import ViewManifestos from "./components/Manifestos/ViewManifestos";
 import ComingSoon from "./components/Layouts/ComingSoon";
 import ViewProfile from "./components/ViewProfile/ViewProfile";
+import AddElection from "./components/Blockchain/AddElection";
+import ManageElection from "./components/Blockchain/ManageElection";
 
 const router = createBrowserRouter(
   [
@@ -34,17 +36,19 @@ const router = createBrowserRouter(
     { path: "/voter/vote", element: <Vote /> },
     { path: "/livedata", element: <LiveData /> },
     { path: "/facial-verification", element: <Verification /> },
+    { path: "/admin/addElection", element: <AddElection /> },
     { path: "/admin/addCandidate", element: <AddCandidate /> },
+    { path: "/admin/manageElection", element: <ManageElection /> },
     { path: "/admin/manageCandidates", element: <ManageCandidates /> },
     { path: "/walletid", element: <GetMetaId /> },
     { path: "/comingsoon", element: <ComingSoon /> },
     { path: "/profile", element: <ViewProfile /> },
-     { path: "/voter/profile", element: <ViewProfile /> }, //change
-    { path: "/admin/ChatbotManager", element: <AdminChatbotManager /> }, 
+    { path: "/voter/profile", element: <ViewProfile /> }, //change
+    { path: "/admin/ChatbotManager", element: <AdminChatbotManager /> },
   ],
   {
     future: {
-      v7_startTransition: true, 
+      v7_startTransition: true,
     },
   }
 );

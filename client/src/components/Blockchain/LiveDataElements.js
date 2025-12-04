@@ -46,7 +46,7 @@ export const NavBarText = styled.div`
 `;
 
 export const AccountInfoBtn = styled.div`
-  position: absolute;;
+  position: absolute;
   top: 20px;
   right: 230px;
   background: #ffffff;
@@ -57,9 +57,8 @@ export const AccountInfoBtn = styled.div`
   cursor: pointer;
   transition: all 0.3s ease;
 
- 
   &:hover {
-    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.2); 
+    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.2);
   }
 
   @media screen and (max-width: 600px) {
@@ -99,8 +98,14 @@ export const Wrapper = styled.div`
   animation: fadeIn 0.5s ease-in;
 
   @keyframes fadeIn {
-    from { opacity: 0; transform: translateY(20px); }
-    to { opacity: 1; transform: translateY(0); }
+    from {
+      opacity: 0;
+      transform: translateY(20px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
   }
 
   @media screen and (max-width: 960px) {
@@ -126,8 +131,14 @@ export const PageTitle = styled.div`
   animation: slideIn 0.5s ease;
 
   @keyframes slideIn {
-    from { transform: translateX(-20px); opacity: 0; }
-    to { transform: translateX(0); opacity: 1; }
+    from {
+      transform: translateX(-20px);
+      opacity: 0;
+    }
+    to {
+      transform: translateX(0);
+      opacity: 1;
+    }
   }
 
   @media screen and (max-width: 960px) {
@@ -263,8 +274,14 @@ export const Card = styled.div`
   }
 
   @keyframes cardPop {
-    from { transform: scale(0.95); opacity: 0; }
-    to { transform: scale(1); opacity: 1; }
+    from {
+      transform: scale(0.95);
+      opacity: 0;
+    }
+    to {
+      transform: scale(1);
+      opacity: 1;
+    }
   }
 `;
 

@@ -6,6 +6,10 @@ body {
   display: flex;
   flex-direction: column;
 }
+.custom-container {
+  width: 90%;
+  margin: auto;
+}
 
 .vote-container {
   display: flex;

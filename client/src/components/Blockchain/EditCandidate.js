@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useRef } from 'react'
+import React, { useEffect, useState, useRef } from "react";
 import {
   Container,
   FormButton,
@@ -15,36 +15,38 @@ import {
   InputCol2,
   FormInput,
   Form,
-} from './EditCandidateElements'
-import { BiImageAdd } from 'react-icons/bi'
+} from "./EditCandidateElements";
+import { BiImageAdd } from "react-icons/bi";
 
 const EditCandidate = ({ candidate, editFunction }) => {
-  const [image, setImage] = useState(null)
-  const [preview, setPreview] = useState(null)
-  const [candidateName, setCandidateName] = useState(candidate.name)
-  const [candidateParty, setCandidateParty] = useState(candidate.party)
-  const [candidateDOB, setCandidateDOB] = useState(candidate.dob)
-  const [candidateEmail, setCandidateEmail] = useState(candidate.email)
-  const [candidateCitizenNo, setCandidateCitizenNo] = useState(candidate.citizenshipNo)
+  const [image, setImage] = useState(null);
+  const [preview, setPreview] = useState(null);
+  const [candidateName, setCandidateName] = useState(candidate.name);
+  const [candidateParty, setCandidateParty] = useState(candidate.party);
+  const [candidateDOB, setCandidateDOB] = useState(candidate.dob);
+  const [candidateEmail, setCandidateEmail] = useState(candidate.email);
+  const [candidateCitizenNo, setCandidateCitizenNo] = useState(
+    candidate.citizenshipNo
+  );
 
-  const fileInputRef = useRef()
+  const fileInputRef = useRef();
 
   useEffect(() => {
     const readImage = () => {
       if (image) {
-        const reader = new FileReader()
-        reader.onloadend = () => setPreview(reader.result)
-        reader.readAsDataURL(image)
+        const reader = new FileReader();
+        reader.onloadend = () => setPreview(reader.result);
+        reader.readAsDataURL(image);
       } else {
-        setPreview(null)
+        setPreview(null);
       }
-    }
+    };
 
-    readImage()
-  }, [image])
+    readImage();
+  }, [image]);
 
   const submitHandler = (e) => {
-    e.preventDefault()
+    e.preventDefault();
     editFunction(
       candidate.id,
       candidateName,
@@ -52,8 +54,8 @@ const EditCandidate = ({ candidate, editFunction }) => {
       candidateCitizenNo,
       candidateDOB,
       candidateEmail
-    )
-  }
+    );
+  };
 
   return (
     <Container>
@@ -63,13 +65,24 @@ const EditCandidate = ({ candidate, editFunction }) => {
           <Form onSubmit={submitHandler}>
             <ImageWrapper>
               <FormLabel>Photo:</FormLabel>
-              <div style={{ display: 'flex', alignItems: 'center' }}>
+              <div style={{ display: "flex", alignItems: "center" }}>
                 {preview ? (
-                  <PreviewImage src={preview} alt="Preview" style={{ marginRight: '10px' }} />
+                  <PreviewImage
+                    src={preview}
+                    alt="Preview"
+                    style={{ marginRight: "10px" }}
+                  />
                 ) : (
-                  <PreviewImage src={candidate.img} alt="Current" style={{ marginRight: '10px' }} />
+                  <PreviewImage
+                    src={candidate.img}
+                    alt="Current"
+                    style={{ marginRight: "10px" }}
+                  />
                 )}
-                <UploadButton onClick={() => fileInputRef.current.click()} type="button">
+                <UploadButton
+                  onClick={() => fileInputRef.current.click()}
+                  type="button"
+                >
                   <BiImageAdd size={24} />
                   <UploadText>Upload New</UploadText>
                 </UploadButton>
@@ -78,7 +91,7 @@ const EditCandidate = ({ candidate, editFunction }) => {
                   accept="image/*"
                   ref={fileInputRef}
                   onChange={(e) => setImage(e.target.files[0])}
-                  style={{ display: 'none' }}
+                  style={{ display: "none" }}
                 />
               </div>
             </ImageWrapper>
@@ -137,7 +150,7 @@ const EditCandidate = ({ candidate, editFunction }) => {
         </FormContent>
       </FormWrap>
     </Container>
-  )
-}
+  );
+};
 
-export default EditCandidate
+export default EditCandidate;

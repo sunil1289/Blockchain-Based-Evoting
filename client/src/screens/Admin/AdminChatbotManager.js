@@ -3,9 +3,10 @@ import Navbar from "../Admin/Navbar";
 import { Link } from "react-router-dom";
 import { RiDashboardLine, RiQuestionnaireFill } from "react-icons/ri";
 import { FaUserEdit } from "react-icons/fa";
+
 import { AiFillFileAdd } from "react-icons/ai";
-import { MdManageAccounts } from "react-icons/md";
-import { FaClipboardList } from "react-icons/fa";
+import { MdHowToVote } from "react-icons/md";
+import { FaClipboardList, FaVoteYea } from "react-icons/fa";
 import "./AdminChatbotManager.css";
 
 const AdminChatbotManager = () => {
@@ -48,13 +49,28 @@ const AdminChatbotManager = () => {
     <div>
       <Navbar />
       <div className="row dashboard-container">
-        {/* Sidebar */}
         <div className="sidebar col-12 col-lg-3 col-md-5 col-sm-6">
           <div className="sidebar-items">
             <div className="sidebar-titles py-3 px-1">
               <Link to="/admin/dashboard" className="link d-block">
                 <RiDashboardLine />
                 <span className="mx-3 py-2">Dashboard</span>
+              </Link>
+            </div>
+          </div>
+          <div className="sidebar-items">
+            <div className="sidebar-titles py-3 px-1">
+              <Link to="/admin/addElection" className="link d-block">
+                <MdHowToVote />
+                <span className="mx-3 py-2">Add Election</span>
+              </Link>
+            </div>
+          </div>
+          <div className="sidebar-items">
+            <div className="sidebar-titles py-3 px-1">
+              <Link to="/admin/manageElection" className="link d-block">
+                <FaVoteYea />
+                <span className="mx-3 py-2">Manage Election</span>
               </Link>
             </div>
           </div>
@@ -70,13 +86,14 @@ const AdminChatbotManager = () => {
             <div className="sidebar-titles py-3 px-1">
               <Link to="/admin/manageCandidates" className="link d-block">
                 <FaUserEdit />
-                <span className="mx-3 py-2">Manage Candidate</span>
+                <span className="mx-3 py-2">Manage Candidates</span>
               </Link>
             </div>
           </div>
+
           <div className="sidebar-items">
             <div className="sidebar-titles py-3 px-1">
-              <Link to="/admin/chatbotManager" className="link d-block">
+              <Link to="/admin/ChatbotManager" className="link d-block">
                 <RiQuestionnaireFill />
                 <span className="mx-3 py-2">Manage Chatbot Questions</span>
               </Link>
@@ -85,7 +102,7 @@ const AdminChatbotManager = () => {
 
           <div className="sidebar-items">
             <div className="sidebar-titles py-3 px-1">
-              <Link to="/admin/manifesto" className="link d-block">
+              <Link to="/admin/manifesto" className="link d-block text-white">
                 <FaClipboardList />
                 <span className="mx-3 py-2">Manage Manifestos</span>
               </Link>

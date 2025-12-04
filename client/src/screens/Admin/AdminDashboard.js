@@ -6,7 +6,8 @@ import { RiDashboardLine } from "react-icons/ri";
 import { FaUserEdit } from "react-icons/fa";
 import { RiQuestionnaireFill } from "react-icons/ri";
 import { AiFillFileAdd } from "react-icons/ai";
-import { FaClipboardList } from "react-icons/fa";
+import { FaVoteYea, FaClipboardList } from "react-icons/fa";
+import { MdHowToVote } from "react-icons/md";
 const AdminDashboard = () => {
   document.title = "Admin Dashboard";
 
@@ -20,6 +21,22 @@ const AdminDashboard = () => {
               <Link to="/admin/dashboard" className="link d-block">
                 <RiDashboardLine />
                 <span className="mx-3 py-2">Dashboard</span>
+              </Link>
+            </div>
+          </div>
+          <div className="sidebar-items">
+            <div className="sidebar-titles py-3 px-1">
+              <Link to="/admin/addElection" className="link d-block">
+                <MdHowToVote />
+                <span className="mx-3 py-2">Add Election</span>
+              </Link>
+            </div>
+          </div>
+          <div className="sidebar-items">
+            <div className="sidebar-titles py-3 px-1">
+              <Link to="/admin/manageElection" className="link d-block">
+                <FaVoteYea />
+                <span className="mx-3 py-2">Manage Election</span>
               </Link>
             </div>
           </div>
@@ -39,6 +56,7 @@ const AdminDashboard = () => {
               </Link>
             </div>
           </div>
+
           <div className="sidebar-items">
             <div className="sidebar-titles py-3 px-1">
               <Link to="/admin/ChatbotManager" className="link d-block">
@@ -50,7 +68,7 @@ const AdminDashboard = () => {
 
           <div className="sidebar-items">
             <div className="sidebar-titles py-3 px-1">
-              <Link to="/admin/manifesto" className="link d-block">
+              <Link to="/admin/manifesto" className="link d-block text-white">
                 <FaClipboardList />
                 <span className="mx-3 py-2">Manage Manifestos</span>
               </Link>

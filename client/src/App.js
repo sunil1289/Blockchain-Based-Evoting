@@ -13,8 +13,10 @@ import ChatBot from "./screens/chatbot/ChatBot";
 import Vote from "./components/Vote/Vote";
 import Verification from "./components/Face-Recognition/verification";
 import CandidateManifesto from "./components/Candidate/CandidateManifesto";
+import AddElection from "./components/Blockchain/AddElection";
 import AddCandidate from "./components/Blockchain/AddCandidate";
 import ManageCandidates from "./components/Blockchain/ManageCandidates";
+import ManageElection from "./components/Blockchain/ManageElection";
 import LiveData from "./components/Blockchain/LiveData";
 import GetMetaId from "./components/GetMetaId/GetMetaId";
 import ViewManifestos from "./components/Manifestos/ViewManifestos";
@@ -48,6 +50,8 @@ const App = () => {
         />
         <Route path="/admin/report" element={<Report />} />
         <Route path="/admin/addCandidate" element={<AddCandidate />} />
+        <Route path="/admin/manageElection" element={<ManageElection />} />
+        <Route path="/admin/addElection" element={<AddElection />} />
         <Route path="/admin/manageCandidates" element={<ManageCandidates />} />
         <Route path="/admin/ChatbotManager" element={<AdminChatbotManager />} />
         <Route path="/livedata" element={<LiveData />} />

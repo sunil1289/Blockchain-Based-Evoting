@@ -1,13 +1,13 @@
-import React, { useState } from 'react';
-import styled from 'styled-components';
-import { RiDashboardLine } from 'react-icons/ri';
-import { FaUserEdit, FaVoteYea } from 'react-icons/fa';
-import { ImStatsBars } from 'react-icons/im';
-import { IoMdChatboxes } from 'react-icons/io';
-import { MdSupportAgent, MdDeveloperMode } from 'react-icons/md';
-import { Link } from 'react-router-dom';
-import WalletImg from '../Homepage/images/forotp.svg';
-import axios from 'axios';
+import React, { useState } from "react";
+import styled from "styled-components";
+import { RiDashboardLine } from "react-icons/ri";
+import { FaUserEdit, FaVoteYea } from "react-icons/fa";
+import { ImStatsBars } from "react-icons/im";
+import { IoMdChatboxes } from "react-icons/io";
+import { MdSupportAgent, MdDeveloperMode } from "react-icons/md";
+import { Link } from "react-router-dom";
+import WalletImg from "../Homepage/images/forotp.svg";
+import axios from "axios";
 import Navbar from "../Layouts/Navbar";
 
 const MainContainer = styled.div`
@@ -38,34 +38,33 @@ export const WalletIdText = styled.p`
 `;
 
 const GetWalletId = () => {
-  const [walletId, setWalletId] = useState('')
-  const getemail = sessionStorage.getItem('email')
-  console.log(getemail)
+  const [walletId, setWalletId] = useState("");
+  const getemail = sessionStorage.getItem("email");
+  console.log(getemail);
   const values = {
     email: getemail,
-  }
+  };
 
-  const BASE_API_URL = 'http://localhost:4000/api/wallet/allmetaids'
+  const BASE_API_URL = "http://localhost:4000/api/wallet/allmetaids";
 
   const onSubmitHandler = (values) => {
-    console.log(values)
+    console.log(values);
     axios
       .post(BASE_API_URL, values, {
-        'Content-Type': 'application/json',
+        "Content-Type": "application/json",
       })
       .then((response) => {
-        console.log(response)
+        console.log(response);
         if (response.data.status) {
-          setWalletId(response.data.metakey)
+          setWalletId(response.data.metakey);
         } else {
-          setWalletId('Unknown Error Occured')
+          setWalletId("Unknown Error Occured");
         }
-      })
-  }
+      });
+  };
   return (
     <div>
- 
-      <Navbar /> 
+      <Navbar />
       <MainContainer>
         <div className="sidebar col-12 col-lg-3 col-md-5 col-sm-6">
           <div className="sidebar-items">
@@ -127,28 +126,36 @@ const GetWalletId = () => {
         </div>
         <div className="col-12 col-lg-9 col-md-7 col-sm-6 py-3">
           <Container>
-             <FormContainer className="p-3">
-          <img src={WalletImg} className="img-fluid p-2 mb-2" alt="wallet" />
-          <div className="d-flex align-items-center justify-content-center">
-            <label className="w-25 text-center">Your Email</label>
-            <input
-              type="text"
-              className="w-75 p-1 pl-0 border border-success rounded text-secondary"
-              value={getemail}
-            />
-          </div>
-          <button
-            className="btn btn-success my-3 d-block w-50 mx-auto border border-success rounded"
-            onClick={() => {
-              onSubmitHandler()
-            }}
-          >
-            Get Wallet Key
-          </button>
-          {walletId && <p className='text-center'>Your Walley Private key is</p>}
-          <WalletIdText className="w-75 text-center">{walletId}</WalletIdText>
-        </FormContainer>
-      </Container>
+            <FormContainer className="p-3">
+              <img
+                src={WalletImg}
+                className="img-fluid p-2 mb-2"
+                alt="wallet"
+              />
+              <div className="d-flex align-items-center justify-content-center">
+                <label className="w-25 text-center">Your Email</label>
+                <input
+                  type="text"
+                  className="w-75 p-1 pl-0 border border-success rounded text-secondary"
+                  value={getemail}
+                />
+              </div>
+              <button
+                className="btn btn-success my-3 d-block w-50 mx-auto border border-success rounded"
+                onClick={() => {
+                  onSubmitHandler();
+                }}
+              >
+                Get Wallet Key
+              </button>
+              {walletId && (
+                <p className="text-center">Your Walley Private key is</p>
+              )}
+              <WalletIdText className="w-75 text-center">
+                {walletId}
+              </WalletIdText>
+            </FormContainer>
+          </Container>
         </div>
       </MainContainer>
     </div>
@@ -156,5 +163,3 @@ const GetWalletId = () => {
 };
 
 export default GetWalletId;
-
-

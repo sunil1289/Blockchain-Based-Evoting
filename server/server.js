@@ -57,18 +57,16 @@ dotenv.config();
 const PORT = process.env.PORT;
 const ENV = process.env.NODE_ENV;
 
-
-app.use(cors({
-  origin: "http://localhost:3000", // ✅ Only allow frontend origin
-  credentials: true,               // ✅ Allow cookies/auth headers
-}));
+app.use(
+  cors({
+    origin: "http://localhost:3000", // ✅ Only allow frontend origin
+    credentials: true, // ✅ Allow cookies/auth headers
+  })
+);
 app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
 connDB();
 app.use(routes);
-
-
-
 
 app.listen(PORT, () => {
   console.log(`Server running on ${PORT} in ${ENV} mode.`.yellow.bold);
